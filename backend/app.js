@@ -6,8 +6,6 @@ const { createUserTable } = require('./models/userModel');
 const { createEmployeeTable } = require('./models/employeeModel');
 const errorHandler = require('./middleware/errorHandler');
 const employeeRoutes = require('./routers/employeeRouter');
-const fileUpload = require('express-fileupload');
-const path = require('path');
 
 const app = express();
 const PORT = 5000;
