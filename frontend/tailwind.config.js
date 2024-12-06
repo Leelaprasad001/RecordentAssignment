@@ -4,7 +4,22 @@ module.exports = {
     "./src/**/*.{js,jsx,ts,tsx}",
   ],
   theme: {
-    extend: {},
+    container: {
+      padding: {
+        DEFAULT: '1rem',
+        sm: '2rem',
+        lg: '4rem',
+        xl: '5rem',
+        '2xl': '6rem',
+      },
+    },
+    extend: {
+      colors: {
+        'custom-blue': '#081E57',
+        'custom-lightblue': '#4A91A4',
+        'custom-orange': '#FF0B29',
+      },
+    },
   },
   plugins: [],
 };
