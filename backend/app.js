@@ -13,7 +13,7 @@ const app = express();
 const PORT = 5000;
 app.use(bodyParser.json());
 
-app.use('/test', testRoutes); 
+app.use('/', testRoutes); 
 app.use('/users', userRoutes);
 app.use('/employees', employeeRoutes);
 
