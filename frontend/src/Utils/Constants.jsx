@@ -1,6 +1,6 @@
 const prod = {
     url: {
-      API_BASE_URL: 'https://recordent-assignment-backend.vercel.app/'
+      API_BASE_URL: 'https://recordent-backend.vercel.app/'
     }
   };
   
