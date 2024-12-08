@@ -96,7 +96,7 @@ const Main = () => {
         </div>
       </div>
 
-      <div className="mt-10 max-w-full m-20 overflow-x-auto">
+      <div className="mt-20 mb-20 max-w-full overflow-x-auto">
         <div className="flex flex-col md:flex-row gap-4 items-center justify-center">
           <input
             type="text"

@@ -18,7 +18,7 @@ const Header = () => {
             className="w-full h-[50px] object-cover rounded-lg"
           />
         </div>
-        <div className="hidden md:flex space-x-8 text-custom-blue">
+        <div className="hidden md:flex items-center space-x-8 text-custom-blue">
           <Link href="/" className="font-xl">Dashboard</Link>
           <div
             className="relative"
