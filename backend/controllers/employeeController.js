@@ -1,66 +1,116 @@
-const path = require('path');
-const { insertEmployee, getAllEmployees, addEmployeesFromCSV, generateEmployeePDF } = require('../models/employeeModel');
+const { Readable } = require('stream');
+const csvParser = require('csv-parser');
+const { addEmployee, addEmployeesFromCSVFile, getPaginatedEmployees, deleteAllEmployees, generateEmployeePDF } = require('../services/employeeService');
 
-const addEmployee = async (req, res) => {
+const addEmployeeController = async (req, res) => {
   try {
-    const { name, department, salary } = req.body;
-    if (!name || !department || !salary) {
-      return res.status(400).json({ error: 'All fields are required' });
-    }
-
-    const result = await insertEmployee({ name, department, salary });
+    const result = await addEmployee(req.body);
     res.status(201).json({ message: 'Employee added successfully', employeeId: result.insertId });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to add employee', details: error.message });
+    res.status(400).json({ error: error.message });
   }
 };
 
-const getEmployees = async (req, res) => {
+const getPaginatedEmployeesController = async (req, res) => {
   try {
-    const employees = await getAllEmployees();
-    res.status(200).json({ employees });
+    const {
+      sortby = 'employee_id',
+      sortorder = 'asc',
+      filter = '',
+      recordPerPage = 10,
+      page = 1,
+    } = req.query;
+
+    const paginationParams = {
+      sortby,
+      sortorder,
+      filter,
+      recordPerPage: parseInt(recordPerPage, 10),
+      page: parseInt(page, 10),
+    };
+
+    const { rows, total } = await getPaginatedEmployees(paginationParams);
+
+    res.status(200).json({
+      success: true,
+      data: rows,
+      total,
+    });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch employees', details: error.message });
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Failed to fetch employees' });
   }
 };
 
-const addEmployeesFromCSVFile = async (req, res) => {
+const addEmployeesFromCSVController = async (req, res) => {
   try {
-    if (!req.files || !req.files.csv) {
-      return res.status(400).json({ error: 'No file uploaded' });
-    }
-    
-    const file = req.files.csv;
     const employees = [];
-    
-    file.data
-      .toString('utf8')
-      .split('\n') // Split by line
-      .slice(1) // Remove header row
-      .forEach((line) => {
-        const [name, department, salary] = line.split(',');
-        if (name && department && salary) {
-          employees.push({
-            name: name.trim(),
-            department: department.trim(),
-            salary: parseFloat(salary.trim()),
-          });
-        }
-      });
-
-    if (employees.length === 0) {
-      return res.status(400).json({ error: 'No valid data found in the file' });
+    if (!req.headers['content-type']?.includes('multipart/form-data')) {
+      return res.status(400).json({ message: 'Invalid content type. Please upload a CSV file.' });
     }
 
-    const result = await addEmployeesFromCSV(employees);
-    res.status(200).json({ message: result });
+    const boundary = '--' + req.headers['content-type'].split('boundary=')[1];
+    const bodyBuffer = [];
+    req.on('data', (chunk) => {
+      bodyBuffer.push(chunk);
+    });
+
+    req.on('end', async () => {
+      const rawData = Buffer.concat(bodyBuffer).toString();
+      const start = rawData.indexOf('\r\n\r\n') + 4;
+      const end = rawData.lastIndexOf(`\r\n${boundary}`);
+      const fileData = rawData.slice(start, end);
+      Readable.from(fileData)
+        .pipe(csvParser())
+        .on('data', (row) => {
+          employees.push({
+            name: row.name,
+            department: row.department,
+            salary: parseFloat(row.salary),
+          });
+        })
+        .on('end', async () => {
+          try {
+            const result = await addEmployeesFromCSVFile(employees);
+            res.status(200).json({
+              message: result,
+            });
+          } catch (error) {
+            console.error('Error processing employees:', error);
+            res.status(500).json({
+              message: 'An error occurred while processing the employees.',
+              error: error.message,
+            });
+          }
+        })
+        .on('error', (error) => {
+          console.error('Error reading CSV:', error);
+          res.status(400).json({
+            message: 'Invalid CSV format.',
+            error: error.message,
+          });
+        });
+    });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to add employees from CSV', details: error.message });
+    console.error('Unexpected error:', error);
+    res.status(500).json({ message: 'An unexpected error occurred.' });
   }
 };
 
+const deleteAllEmployeesController = async (req, res) => {
+  try {
+    const result = await deleteAllEmployees();
+    res.status(200).json(result);
+  } catch (error) {
+    console.error('Error deleting employee records:', error);
+    res.status(500).json({
+      message: 'An error occurred while deleting employee records.',
+      error: error.message,
+    });
+  }
+};
 
-const downloadEmployeePDF = async (req, res) => {
+const downloadEmployeePDFController = async (req, res) => {
   try {
     const doc = await generateEmployeePDF();
     res.setHeader('Content-Type', 'application/pdf');
@@ -74,8 +124,9 @@ const downloadEmployeePDF = async (req, res) => {
 };
 
 module.exports = {
-  addEmployee,
-  getEmployees,
-  addEmployeesFromCSVFile,
-  downloadEmployeePDF,
+  addEmployeeController,
+  getPaginatedEmployeesController,
+  addEmployeesFromCSVController,
+  deleteAllEmployeesController,
+  downloadEmployeePDFController
 };

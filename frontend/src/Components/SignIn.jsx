@@ -4,12 +4,16 @@ import { notifyError, notifySuccess, notifyWarn } from '../Utils/Toasts';
 import Loading from '../Utils/Loading';
 import { allAPIs } from '../Utils/allAPIs';
 import { Eye, EyeOff } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../Utils/AuthContext';
 
 const SignIn = () => {
   const [emailOrMobile, setEmailOrMobile] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [passwordVisible, setPasswordVisible] = useState(false);
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   const validateEmailOrMobile = (input) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -28,7 +32,7 @@ const SignIn = () => {
       return;
     }
     const payload = {
-      username: emailOrMobile,
+      identifier: emailOrMobile,
       password: password,
     };
 
@@ -37,7 +41,9 @@ const SignIn = () => {
     try {
       const response = await allAPIs.signIn(payload);
       if (response.status === 200) {
+        login(response.data.token);
         notifySuccess('Logged in successfully!');
+        navigate('/'); 
       } else {
         notifyError('Unexpected response from the server.');
       }

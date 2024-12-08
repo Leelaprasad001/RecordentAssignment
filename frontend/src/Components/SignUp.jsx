@@ -4,26 +4,27 @@ import { notifyError, notifySuccess, notifyWarn } from '../Utils/Toasts';
 import Loading from '../Utils/Loading';
 import { allAPIs } from '../Utils/allAPIs';
 import { Eye, EyeOff } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const SignUp = () => {
   const [formData, setFormData] = useState({
-    fullname: '',
+    name: '',
     email: '',
-    mobile: '',
+    phone: '',
     password: '',
     confirmPassword: '',
   });
   const [loading, setLoading] = useState(false);
   const [passwordVisible, setPasswordVisible] = useState(false);
-
+  const navigate = useNavigate();
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const validateMobile = (mobile) => /^\d{10}$/.test(mobile);
+  const validatePhone = (phone) => /^\d{10}$/.test(phone);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const { fullname, email, mobile, password, confirmPassword } = formData;
+    const { name, email, phone, password, confirmPassword } = formData;
 
-    if (!fullname || !email || !mobile || !password || !confirmPassword) {
+    if (!name || !email || !phone || !password || !confirmPassword) {
       notifyWarn('Please fill in all fields');
       return;
     }
@@ -31,16 +32,16 @@ const SignUp = () => {
       notifyWarn('Please enter a valid email address');
       return;
     }
-    if (!validateMobile(mobile)) {
-      notifyWarn('Please enter a valid 10-digit mobile number');
+    if (!validatePhone(phone)) {
+      notifyWarn('Please enter a valid 10-digit Phone number');
       return;
     }
     if (password !== confirmPassword) {
       notifyWarn('Passwords do not match');
       return;
     }
-
-    const payload = { fullname, email, mobile, password };
+    
+    const payload = { name, email, phone, password };
 
     setLoading(true);
 
@@ -48,6 +49,7 @@ const SignUp = () => {
       const response = await allAPIs.signUp(payload);
       if (response.status === 201) {
         notifySuccess('Account created successfully!');
+        navigate('/signin'); 
       } else {
         notifyError('Unexpected response from the server.');
       }
@@ -97,8 +99,8 @@ const SignUp = () => {
                   type="text"
                   id="fullname"
                   placeholder="Full Name"
-                  value={formData.fullname}
-                  onChange={(e) => setFormData({ ...formData, fullname: e.target.value })}
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-custom-blue"
                   required
                 />
@@ -116,13 +118,13 @@ const SignUp = () => {
                 />
               </div>
               <div className="w-full">
-                <label htmlFor="mobile" className="block text-left text-neutral-700">Mobile</label>
+                <label htmlFor="phone" className="block text-left text-neutral-700">Phone No.</label>
                 <input
                   type="text"
-                  id="mobile"
-                  placeholder="Mobile"
-                  value={formData.mobile}
-                  onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
+                  id="phone"
+                  placeholder="phone"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   className="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-custom-blue"
                   required
                 />

@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { XIcon } from 'lucide-react';
+import { allAPIs } from '../Utils/allAPIs';
 import { notifyError, notifySuccess, notifyWarn } from '../Utils/Toasts';
 
-const Modal = ({ isOpen, closeModal }) => {
+const Modal = ({ isOpen, closeModal, fetchEmployees }) => {
   const [formType, setFormType] = useState('manual');
   const [name, setName] = useState('');
-  const [department, setDepartment] = useState('');
+  const [department, setDepartment] = useState('engineering');
   const [salary, setSalary] = useState('');
   const [file, setFile] = useState(null);
 
@@ -17,22 +18,39 @@ const Modal = ({ isOpen, closeModal }) => {
         notifyWarn('Please fill out all fields');
         return;
       }
+
       try {
-        await submitManualData();
-        notifySuccess('Employee data added successfully');
-        clearForm();
+        const payload = { name, department, salary };
+        const response = await allAPIs.addManually(payload);
+        if (response.status === 201) {
+          notifySuccess('Employee data added successfully');
+          clearForm();
+          closeModal();
+          fetchEmployees();
+        }
       } catch (err) {
         notifyError('Error adding employee data');
       }
-    } else if (formType === 'upload' && file) {
+    } else if (formType === 'upload') {
+      if (!file) {
+        notifyWarn('Please select a file to upload');
+        return;
+      }
       if (file.type !== 'text/csv') {
         notifyWarn('Please upload a valid CSV file');
         return;
       }
       try {
-        await uploadFile();
-        notifySuccess('File uploaded successfully');
-        clearForm();
+        const formData = new FormData();
+        formData.append('csv', file);
+
+        const response = await allAPIs.addCSV(formData);
+        if (response.status === 200) {
+          notifySuccess('File uploaded successfully');
+          clearForm();
+          closeModal();
+          fetchEmployees();
+        }
       } catch (err) {
         notifyError('Error uploading file');
       }
@@ -41,24 +59,14 @@ const Modal = ({ isOpen, closeModal }) => {
     }
   };
 
-  const submitManualData = async () => {
-    console.log('Submitting manual data:', { name, department, salary });
-    return Promise.resolve();
-  };
-
-  const uploadFile = async () => {
-    console.log('Uploading file:', file);
-    return Promise.resolve();
-  };
-
   const clearForm = () => {
     setName('');
-    setDepartment('');
+    setDepartment('engineering');
     setSalary('');
     setFile(null);
   };
 
-  if (!isOpen) return null;  // Don't render modal if isOpen is false
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 flex justify-center items-center bg-neutral-900 bg-opacity-80 z-50">
@@ -69,7 +77,9 @@ const Modal = ({ isOpen, closeModal }) => {
         <h2 className="text-lg font-semibold mb-4">Add Employee Data</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="formType" className="block text-sm font-medium text-left">Select Option</label>
+            <label htmlFor="formType" className="block text-sm font-medium text-left">
+              Select Option
+            </label>
             <select
               id="formType"
               value={formType}
@@ -84,7 +94,9 @@ const Modal = ({ isOpen, closeModal }) => {
           {formType === 'manual' && (
             <>
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-left">Name</label>
+                <label htmlFor="name" className="block text-sm font-medium text-left">
+                  Name
+                </label>
                 <input
                   type="text"
                   id="name"
@@ -96,23 +108,27 @@ const Modal = ({ isOpen, closeModal }) => {
               </div>
 
               <div>
-                <label htmlFor="department" className="block text-sm font-medium text-left">Department</label>
+                <label htmlFor="department" className="block text-sm font-medium text-left">
+                  Department
+                </label>
                 <select
                   id="department"
                   value={department}
                   onChange={(e) => setDepartment(e.target.value)}
                   className="w-full p-2 mt-2 border rounded"
                 >
-                  <option value="">Select Department</option>
-                  <option value="development">Development</option>
-                  <option value="devops">DevOps</option>
+                  <option value="engineering">Engineering</option>
                   <option value="production">Production</option>
+                  <option value="sales">Sales</option>
+                  <option value="marketing">Marketing</option>
                   <option value="hr">HR</option>
                 </select>
               </div>
 
               <div>
-                <label htmlFor="salary" className="block text-sm font-medium text-left">Salary</label>
+                <label htmlFor="salary" className="block text-sm font-medium text-left">
+                  Salary
+                </label>
                 <input
                   type="number"
                   id="salary"
@@ -127,7 +143,9 @@ const Modal = ({ isOpen, closeModal }) => {
 
           {formType === 'upload' && (
             <div>
-              <label htmlFor="fileUpload" className="block text-sm font-medium text-left">Upload CSV File</label>
+              <label htmlFor="fileUpload" className="block text-sm font-medium text-left">
+                Upload CSV File
+              </label>
               <input
                 type="file"
                 id="fileUpload"

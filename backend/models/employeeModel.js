@@ -1,7 +1,4 @@
 const db = require('../config/dbConfig');
-const fs = require('fs');
-const csv = require('csv-parser');
-const pdf = require('pdfkit');
 
 const createEmployeeTable = async () => {
   const connection = await db();
@@ -36,47 +33,86 @@ const getAllEmployees = async () => {
   return employees;
 };
 
-const addEmployeesFromCSV = async (employees) => {
-    const connection = await db();
-    const query = 'INSERT INTO employees (name, department, salary) VALUES (?, ?, ?)';
-  
-    return new Promise((resolve, reject) => {
-      employees.forEach(async (employee) => {
-        try {
-          await connection.execute(query, [
-            employee.name,
-            employee.department,
-            employee.salary,
-          ]);
-        } catch (error) {
-          reject('Error inserting employees from CSV');
-        }
-      });
-      resolve('Employees added successfully');
-    });
+const fetchPaginatedEmployees = async ({
+  sortby,
+  sortorder,
+  filter,
+  recordPerPage,
+  page,
+}) => {
+  const connection = await db();
+  const validSortColumns = ['employee_id', 'name', 'department', 'salary', 'created_at'];
+  const sortColumn = validSortColumns.includes(sortby) ? sortby : 'employee_id';
+  const sortDirection = sortorder === 'desc' ? 'DESC' : 'ASC';
+
+  const offset = (page - 1) * recordPerPage;
+
+  // Query to fetch the paginated employees
+  const dataQuery = `
+    SELECT *
+    FROM employees
+    WHERE name LIKE ? OR department LIKE ?
+    ORDER BY ${sortColumn} ${sortDirection}
+    LIMIT ? OFFSET ?
+  `;
+
+  // Query to get the total count of matching records
+  const countQuery = `
+    SELECT COUNT(*) as total
+    FROM employees
+    WHERE name LIKE ? OR department LIKE ?
+  `;
+
+  // Execute both queries
+  const [rows] = await connection.query(dataQuery, [
+    `%${filter}%`,
+    `%${filter}%`,
+    recordPerPage,
+    offset,
+  ]);
+
+  const [countResult] = await connection.query(countQuery, [
+    `%${filter}%`,
+    `%${filter}%`,
+  ]);
+
+  const total = countResult[0]?.total || 0;
+
+  return { rows, total };
 };
 
-const generateEmployeePDF = async () => {
-  const employees = await getAllEmployees();
-  const doc = new pdf();
-  doc.fontSize(18).text('Employee Data', { align: 'center' });
-  doc.moveDown();
-  doc.fontSize(12).text('-------------------------------------------------');
-  doc.text('ID | Name | Department | Salary');
-  doc.text('-------------------------------------------------');
-  employees.forEach((employee) => {
-    doc.text(
-      `${employee.employee_id} | ${employee.name} | ${employee.department} | ${employee.salary}`
-    );
-  });
+const addEmployeesFromCSV = async (employees) => {
+  const connection = await db();
+  const query = 'INSERT INTO employees (name, department, salary) VALUES (?, ?, ?)';
+  let count = 0;
 
-  return doc;
+  for (const employee of employees) {
+    try {
+      await connection.execute(query, [
+        employee.name,
+        employee.department,
+        employee.salary,
+      ]);
+      count++;
+    } catch (error) {
+      console.error('Error inserting employee:', employee.name, error);
+    }
+  }
+  return count;
+};
+
+const deleteEmployees = async () => {
+  const connection = await db();
+  const query = 'DROP TABLE IF EXISTS employees';
+  const [result] = await connection.execute(query);
+  return result;
 };
 
 module.exports = {
   createEmployeeTable,
   insertEmployee,
   getAllEmployees,
+  fetchPaginatedEmployees,
   addEmployeesFromCSV,
-  generateEmployeePDF,
+  deleteEmployees,
 };

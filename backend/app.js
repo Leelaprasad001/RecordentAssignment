@@ -6,11 +6,12 @@ const { createUserTable } = require('./models/userModel');
 const { createEmployeeTable } = require('./models/employeeModel');
 const errorHandler = require('./middleware/errorHandler');
 const employeeRoutes = require('./routers/employeeRouter');
+const cors = require('cors');
 
 const app = express();
 const PORT = 5000;
+app.use(cors({ origin: '*' })); 
 app.use(bodyParser.json());
-
 app.use('/', testRoutes); 
 app.use('/users', userRoutes);
 app.use('/employees', employeeRoutes);

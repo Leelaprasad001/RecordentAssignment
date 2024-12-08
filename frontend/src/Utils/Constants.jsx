@@ -1,4 +1,3 @@
-// Environment-specific configurations
 const prod = {
     url: {
       API_BASE_URL: 'https://recordent-assignment-backend.vercel.app/'

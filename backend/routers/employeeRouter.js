@@ -1,11 +1,11 @@
 const express = require('express');
-const { addEmployee, getEmployees, addEmployeesFromCSVFile, downloadEmployeePDF } = require('../controllers/employeeController');
+const { addEmployeeController,getPaginatedEmployeesController, addEmployeesFromCSVController, downloadEmployeePDFController, deleteAllEmployeesController } = require('../controllers/employeeController');
 const router = express.Router();
-const upload = require('../middleware/upload');
 
-router.post('/addManually', addEmployee);
-router.post('/addCSV', upload, addEmployeesFromCSVFile);
-router.get('/getAllEmp', getEmployees);
-router.get('/downloadPDF', downloadEmployeePDF);
+router.post('/addManually', addEmployeeController);
+router.post('/addCSV', addEmployeesFromCSVController);
+router.get('/getAllEmp', getPaginatedEmployeesController);
+router.delete('/deleteAll', deleteAllEmployeesController);
+router.get('/downloadPDF', downloadEmployeePDFController);
 
 module.exports = router;

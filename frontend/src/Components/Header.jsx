@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
+import { Link } from "react-router";
 import { ChevronDown, AlignRight, X } from 'lucide-react';
+import { useAuth } from '../Utils/AuthContext';
 
 const Header = () => {
   const [aboutCompanyOpen, setAboutCompanyOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { auth, logout } = useAuth(); 
 
   return (
     <header className="sticky top-0 z-50 px-0 md:px-8 py-2 shadow-lg bg-neutral-100">
       <div className="container mx-auto flex justify-between items-center">
-        {/* Logo */}
         <div className="font-bold text-xl px-2">
           <img
             src="./logo.png"
@@ -17,7 +19,7 @@ const Header = () => {
           />
         </div>
         <div className="hidden md:flex space-x-8 text-custom-blue">
-          <a href="/" className="font-xl">Dashboard</a>
+          <Link href="/" className="font-xl">Dashboard</Link>
           <div
             className="relative"
             onMouseEnter={() => setAboutCompanyOpen(true)}
@@ -31,20 +33,30 @@ const Header = () => {
               <div className="absolute left-0 mt-2 w-48 bg-white shadow-lg rounded-lg font-xl">
                 <ul>
                   <li>
-                    <a href="/company/overview" className="block px-4 py-2">Overview</a>
+                    <Link href="/company/overview" className="block px-4 py-2">Overview</Link>
                   </li>
                   <li>
-                    <a href="/company/mission" className="block px-4 py-2">Mission</a>
+                    <Link href="/company/mission" className="block px-4 py-2">Mission</Link>
                   </li>
                   <li>
-                    <a href="/company/team" className="block px-4 py-2">Our Team</a>
+                    <Link href="/company/team" className="block px-4 py-2">Our Team</Link>
                   </li>
                 </ul>
               </div>
             )}
           </div>
-          <a href="/" className="font-xl">Pricing</a>
-          <a href="/contact" className="font-xl">Contact</a>
+          <Link href="/" className="font-xl">Pricing</Link>
+          <Link href="/contact" className="font-xl">Contact</Link>
+          <div className="block space-y-4 font-xl space-x-2">
+            {auth && ( 
+              <button
+                onClick={logout}
+                className="px-6 py-2 border border-custom-orange bg-custom-orange text-neutral-100 rounded-3xl hover:bg-white hover:text-custom-orange"
+              >
+                Logout
+              </button>
+            )}
+          </div>
         </div>
 
 
@@ -57,7 +69,7 @@ const Header = () => {
 
       {mobileMenuOpen && (
         <div className="md:hidden bg-white shadow-lg rounded-lg mt-2 p-4 space-y-4 flex flex-col items-center">
-          <a href="/" className="block font-xl">Dashboard</a>        
+          <Link href="/" className="block font-xl">Dashboard</Link>        
           <div className="relative">
             <button
               onClick={() => setAboutCompanyOpen(!aboutCompanyOpen)}
@@ -70,23 +82,29 @@ const Header = () => {
               <div className="absolute left-0 mt-2 w-48 bg-white shadow-lg rounded-lg font-xl">
                 <ul>
                   <li>
-                    <a href="/company/overview" className="block px-4 py-2">Overview</a>
+                    <Link href="/company/overview" className="block px-4 py-2">Overview</Link>
                   </li>
                   <li>
-                    <a href="/company/mission" className="block px-4 py-2">Mission</a>
+                    <Link href="/company/mission" className="block px-4 py-2">Mission</Link>
                   </li>
                   <li>
-                    <a href="/company/team" className="block px-4 py-2">Our Team</a>
+                    <Link href="/company/team" className="block px-4 py-2">Our Team</Link>
                   </li>
                 </ul>
               </div>
             )}
           </div>
-          <a href="/" className="block font-xl">Pricing</a>
-          <a href="/contact" className="block font-xl space-x-1">Contact</a>
+          <Link href="/" className="block font-xl">Pricing</Link>
+          <Link href="/contact" className="block font-xl space-x-1">Contact</Link>
           <div className="block space-y-4 font-xl space-x-2">
-            <a href="/signin" className="px-6 py-2 border border-custom-blue bg-custom-blue text-neutral-100 rounded-3xl hover:bg-white hover:text-custom-blue">Sign In</a>
-            <a href="/signup" className="px-6 py-2 border border-custom-orange bg-custom-orange text-neutral-100 rounded-3xl hover:bg-white hover:text-custom-orange">Sign Up</a>
+            {auth && ( 
+              <button
+                onClick={logout}
+                className="px-6 py-2 border border-custom-orange bg-custom-orange text-neutral-100 rounded-3xl hover:bg-white hover:text-custom-orange"
+              >
+                Logout
+              </button>
+            )}
           </div>
         </div>
       )}
